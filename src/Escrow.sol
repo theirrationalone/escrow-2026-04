@@ -1,18 +1,28 @@
 // SPDX-License-Identifier: MIT
 
+// @info: This's the auditor (theirrationalone) who's modified the pragma solidity version to ^0.8.20, the original version is 0.8.18 and that's all okay, so no issues here.
 pragma solidity ^0.8.20;
 
 // Inspired by `BillOfSaleERC20` contract: https://github.com/open-esq/Digital-Organization-Designs/blob/master/Finance/BillofSaleERC20.sol
 
+// @follow-up: analysis remains for IEscrow.
 import {IEscrow} from "./IEscrow.sol";
+
+// @info: all below imports are from openzeppelin, so no issues here too.
+// @TODOs: Head to learn everything about these imports. what they're? why they are used?, and how imparative they are actually in context of this protocol solution's security and functionality.
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
+// @shout-out: Hayo Cyfrin ;`)
 /// @author Cyfrin
 /// @title Escrow
 /// @notice Escrow contract for transactions between a seller, buyer, and optional arbiter.
+// @info: Yeah, all linear inheritance, therefore no issues here.
 contract Escrow is IEscrow, ReentrancyGuard {
+    // @info: using safe version of erc20, tokens might flow in a more restricted way as compared of normal or vanilla erc20.
+    // @caveat: Heavy restrictions on tokens could lead to over-protection issues sometime.
+    // @follow-up: requires check its diligence
     using SafeERC20 for IERC20;
 
     uint256 private immutable i_price;

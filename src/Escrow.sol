@@ -22,7 +22,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 contract Escrow is IEscrow, ReentrancyGuard {
     // @info: using safe version of erc20, tokens might flow in a more restricted way as compared of normal or vanilla erc20.
     // @caveat: Heavy restrictions on tokens could lead to over-protection issues sometime.
-    // @follow-up: requires check its diligence
+    // @follow-up: requires to check its diligence diligently.
     using SafeERC20 for IERC20;
 
     uint256 private immutable i_price;
@@ -51,7 +51,12 @@ contract Escrow is IEscrow, ReentrancyGuard {
         if (address(tokenContract) == address(0)) revert Escrow__TokenZeroAddress();
         if (buyer == address(0)) revert Escrow__BuyerZeroAddress();
         if (seller == address(0)) revert Escrow__SellerZeroAddress();
+        // @info: not-so efficient check to prevent heavy arbiter fee.
+        // this check can be bypassed with the arbiterFee just a penny less than the price.
+        // @follow-up: does this contract has any function to update the arbiter fee? if not, then a better threshold or ratio based check is a must necessity.
         if (arbiterFee >= price) revert Escrow__FeeExceedsPrice(price, arbiterFee);
+        // @question: is it okay to have token with excess balance?
+        // @info: okay, so the price precision is token decimals based.
         if (tokenContract.balanceOf(address(this)) < price) revert Escrow__MustDeployWithTokenBalance();
         i_price = price;
         i_tokenContract = tokenContract;
@@ -83,6 +88,7 @@ contract Escrow is IEscrow, ReentrancyGuard {
 
     /// @dev Throws if called by any account other than arbiter.
     modifier onlyArbiter() {
+        // @info: known-issue empowerer, providing top notch of security over malicious actors though.
         if (msg.sender != i_arbiter) {
             revert Escrow__OnlyArbiter();
         }

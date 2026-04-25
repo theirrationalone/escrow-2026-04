@@ -1,6 +1,6 @@
 name: CI
 
-on:
+of:
   push:
   pull_request:
   workflow_dispatch:

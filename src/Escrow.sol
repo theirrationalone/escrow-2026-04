@@ -108,10 +108,21 @@ contract Escrow is IEscrow, ReentrancyGuard {
     /////////////////////
 
     /// @inheritdoc IEscrow
+    // @info: should/must be possible after off-chain report hand-over to the buyer(a person or a contract receiving confirmation msg) from their linked seller
+    // @ambiguous-known-issue-assumption: buyer never calls confirmReceipt - The terms of the Escrow are agreed upon by the buyer and seller before deploying it. The onus is on the seller to perform due diligence on the buyer and their off-chain identity/reputation before deciding to supply the buyer with their services.
+    // @question: Why the heck it's a job of a seller to verify the credibility of the buyer?? then, why they hired an arbiter???
+    // That should be the job of an arbiter, in our case for example, the codehawks & team might have some sort of reputed clients(buyers list) or accountability to confirm their buyers goodwill in the market and the quality of them.
     function confirmReceipt() external onlyBuyer inState(State.Created) {
         s_state = State.Confirmed;
         emit Confirmed(i_seller);
 
+        // @BUG-1: Funds loss: a malicious seller could appear all legit and will sweep out all the tokens of this contract upon his audit receipt confirmation.
+        // @verified: false
+        // @BUG-2: DoS: chained to @BUG-1, consequences leads to a DoS for all other buyers(protocols) & sellers(auditors)
+        // @verified: false
+        // @BUG-3: chained Funds-loss -> DoS: CONSEQUENCED to ref @BUG-1 then @BUG-2 == @BUG-3
+        // @verified: false
+        // @question: does safeTranfer contains any delegate call??????? - reentrancy could be a suspicious torment in that case.
         i_tokenContract.safeTransfer(i_seller, i_tokenContract.balanceOf(address(this)));
     }
 

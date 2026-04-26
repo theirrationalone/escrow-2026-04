@@ -21,7 +21,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 // @info: Yeah, all linear inheritance, therefore no issues here.
 contract Escrow is IEscrow, ReentrancyGuard {
     // @info: using safe version of erc20, tokens might flow in a more restricted way as compared of normal or vanilla erc20.
-    // @caveat: Heavy restrictions on tokens could lead to over-protection issues sometime.
+    // @caveat: Heavy restrictions on tokens could lead to over-protection issues sometimes.
     // @follow-up: requires to check its diligence diligently.
     using SafeERC20 for IERC20;
 
@@ -64,6 +64,8 @@ contract Escrow is IEscrow, ReentrancyGuard {
         i_seller = seller;
         i_arbiter = arbiter;
         i_arbiterFee = arbiterFee;
+        // @info: missing s_state initialization
+        // @info: might default to created
     }
 
     /////////////////////
@@ -97,6 +99,7 @@ contract Escrow is IEscrow, ReentrancyGuard {
 
     /// @dev Throws if contract called in State other than one associated for function.
     modifier inState(State expectedState) {
+        // @Gas: reading s_state twice directly from storage, which is a bit gas inefficient.
         if (s_state != expectedState) {
             revert Escrow__InWrongState(s_state, expectedState);
         }

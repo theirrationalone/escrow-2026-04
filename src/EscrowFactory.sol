@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 
+// @info: This's the auditor (theirrationalone) who's modified the pragma solidity version to ^0.8.20, the original version is 0.8.18 and that's all okay, so no issues here.
 pragma solidity ^0.8.20;
 
 import {IEscrowFactory} from "./IEscrowFactory.sol";
 import {IEscrow} from "./IEscrow.sol";
 import {Escrow} from "./Escrow.sol";
+
+// @info: all below imports are from openzeppelin, so no issues here too.
+// @TODOs: Head to learn everything about these imports. what they're? why they are used?, and how imparative they are actually in context of this protocol solution's security and functionality.
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -37,7 +41,13 @@ contract EscrowFactory is IEscrowFactory {
             arbiter,
             arbiterFee
         );
+        // @BUG: Funds lost possibility
+        // @reason: perceived or computed escrow address may result to a mismatch with the actual escrow address
         tokenContract.safeTransferFrom(msg.sender, computedAddress, price);
+        
+        // @info: salt could the victim, possible front-running MEV
+        // @note: already a known-issue
+        // @info: It's buyer's (deployer|msg.sender) best interest to deploy the escrow best.
         Escrow escrow = new Escrow{salt: salt}(
             price,
             tokenContract,
@@ -50,6 +60,9 @@ contract EscrowFactory is IEscrowFactory {
             revert EscrowFactory__AddressesDiffer();
         }
         emit EscrowCreated(address(escrow), msg.sender, seller, arbiter);
+
+        // @question: can two or more identical contracts be created using same & redundant inputs???
+        // @assumption: if yes, then, sniffed doubtfull BUGs in escrow would all become real and there could have even more disruptive outcomes too.
         return escrow;
     }
 
@@ -65,6 +78,7 @@ contract EscrowFactory is IEscrowFactory {
         address arbiter,
         uint256 arbiterFee
     ) public pure returns (address) {
+        // @TODO: verify the raw contract address computation method and all injected inputs.
         address predictedAddress = address(
             uint160(
                 uint256(
